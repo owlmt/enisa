@@ -14,6 +14,8 @@ This repository has three parts:
 
 The throughline: ENISA's randomness requirements are **architectural/design** requirements on the RNG→DRBG construction, not a black-box statistical battery one "passes." `compliance/` assesses against the sound requirements; `critique/` proves why the statistical-testing requirement in §7.1 must be demoted to runtime failure-detection only.
 
+**To run anything in this repo, see [`RUNNING.md`](RUNNING.md)** — prerequisites, exact commands, and what success looks like for the §7.1 demo and the host assessments. A side-by-side of three real machines (Windows / WSL / EC2) is in [`compliance/COMPARISON.md`](compliance/COMPARISON.md).
+
 ## Source & version
 
 - **Authoritative document:** ECCG Sub-group on Cryptography, *Agreed Cryptographic Mechanisms*, **Version 2.0, April 2025** (published 6 May 2025).
