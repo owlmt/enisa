@@ -1,0 +1,6 @@
+critique/fakeB.bin
+critique/real.bin
+compliance/*_rng_sample.bin
+compliance/*_assessment.json
+*.pyc
+__pycache__/
