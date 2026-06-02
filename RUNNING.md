@@ -100,13 +100,13 @@ Reports hardware/TPM/FIPS inventory and the CNG ENISA verdicts (each tagged
 
 ## What the verdicts mean (important)
 
-These tools assess **architecture/design**, not a black-box statistical battery. A
-`[design]` verdict (e.g. "TRNG only seeds DRBG", "seed ≥125 bits") is a documented property
-of the platform RNG, **asserted, not measured on your host**. A `[measured]` line (e.g.
-`vmgenid=no`, `entropy_avail`) is read live. Statistical testing of output is **deliberately
-excluded** as a compliance criterion — see `critique/SECTION_7.1_CRITIQUE.md` for why a
-predictable stream passes it. Treat the output as evidence-of-design plus a live inventory,
-not as certification.
+These tools assess the platform RNG's **architecture/design**, not a black-box statistical battery, and they do **not** certify a specific host.
 
-Generated artifacts (`*.bin`, `*_assessment.json`) are git-ignored; commit only the
-evidence logs you intend to publish.
+Each verdict line is tagged with its basis:
+- **`[measured]`** — read live from the host being assessed (e.g. `vmgenid=no`, `entropy_avail`, kernel version, FIPS-policy state).
+- **`[derived]`** — computed from a measured value (e.g. the AIS 20/31 class is derived from the measured kernel version).
+- **`[design]`** — a documented property of the platform RNG (e.g. "TRNG only seeds DRBG", "seed min-entropy ≥125 bits of entropy"). **A `MEETS [design]` line is not a pass the host earned — it states what the platform's RNG is documented to do, asserted from public design references and not verified on the running machine.**
+
+Statistical testing of output is **deliberately excluded** as a compliance criterion — see `critique/SECTION_7.1_CRITIQUE.md` for why a fully predictable stream passes it. Treat the output as evidence-of-design plus a live inventory — **not as certification, and not as a measurement of the host's actual entropy.**
+
+Generated files (`*.bin`, `*_assessment.json`) are git-ignored, so running the scripts does not clutter a clone.

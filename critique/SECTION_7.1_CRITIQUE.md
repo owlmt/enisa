@@ -1,6 +1,6 @@
 # ENISA ACM §7.1 — Why "statistical testing" must not be advised as a source-quality assessment method
 
-**Target:** ENISA / ECCG *Agreed Cryptographic Mechanisms*, Section 7.1 *True Random Source*, first bullet ("Perform statistical tests on the output of the source"). References are to **published v2.0 (April 2025)**; the same text appears in the April 2026 working draft.
+**Target:** ENISA / ECCG *Agreed Cryptographic Mechanisms*, Section 7.1 *True Random Source*, first bullet ("Perform statistical tests on the output of the source"). References are to the **adopted v2.0 (May 2025)**, the applicable version. A v3.0 draft is in public review until end of July 2026; it should be checked against this wording before filing an update.
 
 ---
 
@@ -40,7 +40,7 @@ A sharper observation: **§7.1 does not even name a test battery.** It is theref
 
 Measured on 10,000,000 bits (α = 0.01). **Raw evidence logs are committed under `critique/evidence/`** (timestamped, with host/version provenance); reproduce with `run_demo.sh`.
 
-> The **predictable** column is *deterministic*: because the key is published, these exact figures reproduce on every run, on any machine. The **os.urandom** column differs on every run by nature — a real source is not reproducible — so the values shown are from one representative run and are not expected to match yours. The invariant being demonstrated is the **verdict** (both PASS), not the os.urandom p-values.
+> The **predictable** column is fixed by construction — the key is public, so these values are reproducible byte-for-byte on any machine (verified by the SHA-256 pin in `run_demo.sh`). The **os.urandom** column is a single real run; its individual p-values carry no meaning and would differ on any other run, as a real source should. What the table demonstrates is the **shared verdict — both PASS** — not the specific numbers.
 
 | Test | Predictable (published-key AES-256-CTR) | os.urandom |
 |------|------------------------------------------|------------|
@@ -59,7 +59,7 @@ Measured on 10,000,000 bits (α = 0.01). **Raw evidence logs are committed under
 | output-MCV min-entropy (bits/bit) | 0.9988 | 0.9983 |
 | **TRUE secret min-entropy** | **0 (key published)** | source-modeled (≠0) |
 
-*Data from the real WSL run of 2026-06-02T17:53:35Z (kernel 5.15, Python 3.12.3), committed under `critique/evidence/`. The predictable column is deterministic and reproduces exactly on any machine; the os.urandom column is from that run and differs on every run by nature.*
+*Data from a real WSL run (2026-06-02T17:53:35Z, kernel 5.15, Python 3.12.3), committed under `critique/evidence/`.*
 
 ![Section 7.1 demonstration](section7_1_demo.png)
 
