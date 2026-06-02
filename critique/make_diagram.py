@@ -33,7 +33,7 @@ SP80022 = [
 # output-based MCV min-entropy (bits per bit) and TRUE secret min-entropy
 MINENT = {
     "predictable": {"mcv_per_bit": 0.9988, "true_secret_per_bit": 0.0},
-    "real":        {"mcv_per_bit": 0.9987, "true_secret_per_bit": None},  # None = source-modeled / unknown
+    "real":        {"mcv_per_bit": 0.9983, "true_secret_per_bit": None},  # None = source-modeled / unknown
 }
 ALPHA = 0.01
 RUN_LABEL = "WSL kernel 5.15 · 2026-06-02T17:53:35Z · 10,000,000 bits · alpha=0.01"

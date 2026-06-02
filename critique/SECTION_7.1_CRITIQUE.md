@@ -56,14 +56,14 @@ Measured on 10,000,000 bits (α = 0.01). **Raw evidence logs are committed under
 | SP800-22 approximate-entropy | PASS (p=0.2999) | PASS (p=0.1423) |
 | SP800-22 serial (1,2) | PASS (0.2999, 0.0960) | PASS (0.1421, 0.1648) |
 | SP800-22 spectral/DFT | PASS (p=0.1645) | PASS (p=0.0533) |
-| output-MCV min-entropy (bits/bit) | 0.9988 | 0.9987 |
+| output-MCV min-entropy (bits/bit) | 0.9988 | 0.9983 |
 | **TRUE secret min-entropy** | **0 (key published)** | source-modeled (≠0) |
 
 *Data from the real WSL run of 2026-06-02T17:53:35Z (kernel 5.15, Python 3.12.3), committed under `critique/evidence/`. The predictable column is deterministic and reproduces exactly on any machine; the os.urandom column is from that run and differs on every run by nature.*
 
 ![Section 7.1 demonstration](section7_1_demo.png)
 
-*Figure: both streams clear the α=0.01 PASS line on every test (left); the predictable stream's credited min-entropy (0.9988) is indistinguishable from the real source's (0.9987), yet its TRUE secret min-entropy is 0 (right). Regenerate with `python3 make_diagram.py` (or `--self-run` to recompute from freshly generated streams).*
+*Figure: both streams clear the α=0.01 PASS line on every test (left); the predictable stream's credited min-entropy (0.9988) is indistinguishable from the real source's (0.9983), yet its TRUE secret min-entropy is 0 (right). Regenerate with `python3 make_diagram.py` (or `--self-run` to recompute from freshly generated streams).*
 
 **Identical verdict.** The predictable stream is regenerable from the public key printed in `predict_streamB_demo.py`. (`battery.py` ships an **8-test subset** of NIST SP800-22, sufficient to demonstrate the effect; the full 15-test NIST STS is expected to give the same verdict, and the independently published AIS 31 v3.0 Tirn result at `github.com/owlmt/ais31-full-evaluation` confirms the predictor-based tests — MultiMMC, LZ78Y — also pass on this construction.)
 
@@ -71,7 +71,7 @@ Measured on 10,000,000 bits (α = 0.01). **Raw evidence logs are committed under
 
 ENISA states numeric randomness thresholds — DRBG seed min-entropy ≥125 bits (Note 68), ≥188 bits in quantum contexts (Note 69), CTR_DRBG key ≥192 bits (Note 71), symmetric keys ≥192 (Notes 3/19), hash output ≥384 (Note 4), MAC keys ≥192 (Note 19). These split into two kinds, and the predictable stream defeats **both**:
 
-- **Entropy thresholds (seed ≥125 / ≥188).** Min-entropy can only be established by modeling the *raw noise source* (SP 800-90B) — never by tests on conditioned output. But §7.1 sanctions statistical testing of the output as an assessment approach, and an evaluator who follows it (or who runs an SP 800-90B estimator on the *output* rather than the raw source) gets a near-maximal estimate. Measured with the SP 800-90B 6.3.1 most-common-value estimator on the **output**: the published-key fake scores **0.9988 bits/bit** — statistically indistinguishable from `os.urandom` at 0.9985 — so a 256-bit draw is **credited ≈256 bits, clearing the ≥188-bit quantum bar**, while its **true secret min-entropy is 0** (the key is published). The threshold is *falsely credited*, not met.
+- **Entropy thresholds (seed ≥125 / ≥188).** Min-entropy can only be established by modeling the *raw noise source* (SP 800-90B) — never by tests on conditioned output. But §7.1 sanctions statistical testing of the output as an assessment approach, and an evaluator who follows it (or who runs an SP 800-90B estimator on the *output* rather than the raw source) gets a near-maximal estimate. Measured with the SP 800-90B 6.3.1 most-common-value estimator on the **output**: the published-key fake scores **0.9988 bits/bit** — statistically indistinguishable from `os.urandom` at 0.9983 — so a 256-bit draw is **credited ≈256 bits, clearing the ≥188-bit quantum bar**, while its **true secret min-entropy is 0** (the key is published). The threshold is *falsely credited*, not met.
 - **Size thresholds (key ≥192, hash ≥384).** These are bit-length checks. AES-256 has a 256-bit key whether or not that key is secret, so the predictable construction **meets them by construction**. A key generated from the fake has the requested *size* but inherits **0 secret entropy**.
 
 `entropy_claim_assessment.py` in this repository prints this contrast for any stream. The result: under ENISA's §7.1 statistical-testing path, **a fully predictable RNG would be assessed as clearing the quantitative randomness bar** — the entropy thresholds by *false crediting*, the size thresholds *by construction*. We never assert the fake "has" 188 bits of entropy; the precise statement is that ENISA's sanctioned assessment path would certify a zero-entropy source as meeting them. §7.1 itself concedes statistical tests give no distribution assurance — the point is that the structure still presents statistical testing as a source-quality *assessment* approach, which is what this counterexample targets.
@@ -91,7 +91,7 @@ Concretely, the §7.1 first bullet should state that statistical tests serve onl
 
 The following is drafted to the elements required by Appendix C of the document.
 
-- **Contact of the submitter:** *[your name, affiliation, email]* (CyberSeQ).
+- **Contact of the submitter:** Mark Tehrani, CyberSeQ (madjid-tehrani).
 - **Section / Quote:** §7.1 *True Random Source*, first bullet: *"Perform statistical tests on the output of the source… it does not provide any assurance on the distribution of the output of the random source… statistical tests are useful to detect unintentional failure of the random source."*
 - **Category:** Incorrect content.
 - **Update presentation (proposed new text):**
