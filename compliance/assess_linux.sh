@@ -99,23 +99,24 @@ fi
 say "CSPRNG construction: $CSPRNG"
 
 hdr "ENISA sound-criteria mapping (Linux getrandom/urandom)"
+say "  basis tags: [measured]=read from this host  [derived]=computed from measured kernel version  [design]=documented property of the Linux RNG, NOT verified on this host"
 if [ "$CSPRNG_KNOWN" = yes ]; then
-  say "[DEVIATES]      Agreed DRBG = HMAC/Hash/CTR_DRBG (SP800-90A)"
+  say "[DEVIATES] [derived] Agreed DRBG = HMAC/Hash/CTR_DRBG (SP800-90A)"
   say "                This kernel's user-facing CSPRNG is a ChaCha20-based DRNG; NOT on ENISA's"
   say "                three-DRBG agreed list. For an ENISA agreed-DRBG posture use a SP800-90A DRBG"
   say "                (kernel 'drbg' module / jitterentropy, or userspace) seeded from the kernel."
-  say "[MEETS]         Backtracking resistance for PFS (Note 70) — ChaCha20 fast key erasure (5.17+ confirmed; 4.8–5.16 via reseed)."
+  say "[MEETS] [design] Backtracking resistance for PFS (Note 70) — ChaCha20 fast key erasure (5.17+ confirmed; 4.8–5.16 via reseed)."
 else
-  say "[EVIDENCE-NEEDED] Agreed-DRBG verdict withheld: CSPRNG construction not established for this kernel."
-  say "[EVIDENCE-NEEDED] Backtracking-resistance verdict withheld pending construction evidence."
+  say "[EVIDENCE-NEEDED] [derived] Agreed-DRBG verdict withheld: CSPRNG construction not established for this kernel."
+  say "[EVIDENCE-NEEDED] [derived] Backtracking-resistance verdict withheld pending construction evidence."
 fi
-say "[MEETS]         TRNG only seeds DRBG; no direct TRNG output (Note 67) — getrandom exposes DRBG only."
-say "[MEETS]         Seed min-entropy >=125 (Note 68) — kernel collects 256 bits before fully-seeded."
-say "[EVIDENCE]      Source modeling (preferred, §7.1 approach 2) — use BSI LRNG study as the model."
+say "[MEETS] [design] TRNG only seeds DRBG; no direct TRNG output (Note 67) — getrandom exposes DRBG only (Linux RNG architecture, not verified on this host)."
+say "[MEETS] [design] Seed min-entropy >=125 (Note 68) — kernel collects 256 bits before fully-seeded (documented Linux behaviour; entropy budget not measured here)."
+say "[EVIDENCE-NEEDED] [design] Source modeling (preferred, §7.1 approach 2) — establish via the BSI LRNG study; not produced by this script."
 if [ "$EC2" = yes ] || [ "$VIRT" != "none" -a "$VIRT" != "unknown" ]; then
-  say "[VM-RISK]       Snapshot/clone state reuse — needs vmgenid/vmfork (>=5.18). vmgenid=$VMGENID."
-  say "[VM-RISK]       Boot-time entropy reduced under virtualization (BSI 'Randomness in VMs')."
-  say "[VM-INFO]       Prefer hwrng/virtio-rng passthrough; virtio-rng=$VIRTIO, RDRAND=$RDRAND."
+  say "[VM-RISK] [measured] Snapshot/clone state reuse — needs vmgenid/vmfork (>=5.18). vmgenid=$VMGENID (measured)."
+  say "[VM-RISK] [design] Boot-time entropy reduced under virtualization (BSI 'Randomness in VMs'); see crng-init timing above."
+  say "[VM-INFO] [measured] Prefer hwrng/virtio-rng passthrough; virtio-rng=$VIRTIO, RDRAND=$RDRAND (measured)."
 fi
 
 # ---------- 6. Raw sample (failure-detection sanity only) ----------

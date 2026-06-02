@@ -37,7 +37,7 @@ Write-Host ("Serial (BIOS)  : {0}" -f $bios.SerialNumber)
 Write-Host ("Board          : {0} {1}" -f $board.Manufacturer, $board.Product)
 Write-Host ("BIOS           : {0} {1}" -f $bios.Manufacturer, $bios.SMBIOSBIOSVersion)
 Write-Host ("OS             : {0} (build {1})" -f $os.Caption, $os.BuildNumber)
-Write-Host ("RDRAND/RDSEED  : {0} (verify with Sysinternals coreinfo -f)" -f ($(if($rdrandLikely){"likely present"}else{"unknown"})))
+Write-Host ("RDRAND/RDSEED  : {0} [heuristic from CPU vendor; verify with Sysinternals coreinfo -f or the Linux /proc/cpuinfo read]" -f ($(if($rdrandLikely){"likely present"}else{"unknown"})))
 
 # TPM
 $tpm = Get-Tpm
@@ -56,21 +56,22 @@ Write-Host ("HypervisorPres : {0}" -f $cs.HypervisorPresent)
 
 # ---------- 2. RNG architecture mapped to ENISA sound criteria ----------
 Section "ENISA sound-criteria mapping (Windows CNG)"
+Write-Host "  basis tags: [measured]=read from this host  [design]=documented property of Windows CNG, NOT verified on this host"
 $findings = @(
-  @{ req="Agreed DRBG = HMAC/Hash/CTR_DRBG (SP800-90A)"; verdict="MEETS";
-     note="Windows CNG (BCryptGenRandom/ProcessPrng) uses AES-256 CTR_DRBG per SP800-90A; on ENISA's agreed DRBG list (Note 71 quantum key-size satisfied at 256-bit)." }
-  @{ req="TRNG only seeds DRBG; no direct TRNG output (Note 67)"; verdict="MEETS";
+  @{ req="Agreed DRBG = HMAC/Hash/CTR_DRBG (SP800-90A)"; verdict="MEETS"; basis="design";
+     note="Windows CNG (BCryptGenRandom/ProcessPrng) uses AES-256 CTR_DRBG per SP800-90A; on ENISA's agreed DRBG list (Note 71 quantum key-size satisfied at 256-bit). Documented design, not verified on this host." }
+  @{ req="TRNG only seeds DRBG; no direct TRNG output (Note 67)"; verdict="MEETS"; basis="design";
      note="User-facing API returns DRBG output only; raw entropy sources (RDRAND/RDSEED/TPM/interrupt timing) feed the seed, not the caller." }
-  @{ req="Seed min-entropy >=125 bits (Note 68)"; verdict="MEETS";
-     note="CNG reseeds from multiple entropy sources; FIPS-validated builds document >=256-bit seeding." }
-  @{ req="Backtracking resistance for PFS (Note 70)"; verdict="MEETS";
+  @{ req="Seed min-entropy >=125 bits (Note 68)"; verdict="MEETS"; basis="design";
+     note="CNG reseeds from multiple entropy sources; FIPS-validated builds document >=256-bit seeding. Entropy budget not measured here." }
+  @{ req="Backtracking resistance for PFS (Note 70)"; verdict="MEETS"; basis="design";
      note="CTR_DRBG state update + periodic reseed prevent practical recovery of past output from current state." }
-  @{ req="Quantum seed >=188 bits (Note 69)"; verdict="CONDITIONAL";
+  @{ req="Quantum seed >=188 bits (Note 69)"; verdict="CONDITIONAL"; basis="design";
      note="Only if a quantum-resistant posture is claimed; verify seeding entropy budget for that context." }
-  @{ req="FIPS 140 validation"; verdict=$(if($fips -eq 1){"MEETS (policy on)"}else{"EVIDENCE-NEEDED"});
-     note="CMVP certificates exist per Windows build; enabling FIPS policy enforces validated algorithms." }
+  @{ req="FIPS 140 validation"; verdict=$(if($fips -eq 1){"MEETS (policy on)"}else{"EVIDENCE-NEEDED"}); basis="measured";
+     note="FIPS policy state read from registry (this host). CMVP certificates exist per Windows build; enabling FIPS policy enforces validated algorithms." }
 )
-foreach($f in $findings){ Write-Host ("[{0}] {1}" -f $f.verdict, $f.req); Write-Host ("        {0}" -f $f.note) }
+foreach($f in $findings){ Write-Host ("[{0}] [{1}] {2}" -f $f.verdict, $f.basis, $f.req); Write-Host ("        {0}" -f $f.note) }
 
 # ---------- 3. Raw sample (failure-detection sanity only) ----------
 Section "Emitting RNG sample (sanity check only, NOT compliance evidence)"
