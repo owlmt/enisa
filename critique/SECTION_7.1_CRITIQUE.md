@@ -15,6 +15,8 @@ The document itself concedes that the statistical approach "does not provide any
 
 ## 2. The defect
 
+> **Scope of this artifact.** The generator demonstrated here is intentionally **not** a true random source, and we do not claim it is one. It is a *counterexample*: a deterministic generator with fully public state, used to show that black-box statistical testing of output is insufficient as evidence of source quality. The expected objection — "this is not a probabilistic source, so §7.1 does not apply to it" — is precisely the point. §7.1's statistical-testing approach is handed bytes and asked to assess their quality; it cannot tell that those bytes come from a published-key cipher rather than a physical source. A method blind to that distinction must not be relied upon to establish source quality. The argument is about the *insufficiency of the method*, not about the artifact being a legitimate RNG.
+
 A statistical battery measures one thing: whether output is **distinguishable from uniform by the specific tests in that battery**. It does **not** and **cannot** measure:
 
 - unpredictability,
@@ -72,7 +74,7 @@ ENISA states numeric randomness thresholds — DRBG seed min-entropy ≥125 bits
 - **Entropy thresholds (seed ≥125 / ≥188).** Min-entropy can only be established by modeling the *raw noise source* (SP 800-90B) — never by tests on conditioned output. But §7.1 sanctions statistical testing of the output as an assessment approach, and an evaluator who follows it (or who runs an SP 800-90B estimator on the *output* rather than the raw source) gets a near-maximal estimate. Measured with the SP 800-90B 6.3.1 most-common-value estimator on the **output**: the published-key fake scores **0.9988 bits/bit** — statistically indistinguishable from `os.urandom` at 0.9985 — so a 256-bit draw is **credited ≈256 bits, clearing the ≥188-bit quantum bar**, while its **true secret min-entropy is 0** (the key is published). The threshold is *falsely credited*, not met.
 - **Size thresholds (key ≥192, hash ≥384).** These are bit-length checks. AES-256 has a 256-bit key whether or not that key is secret, so the predictable construction **meets them by construction**. A key generated from the fake has the requested *size* but inherits **0 secret entropy**.
 
-`entropy_claim_assessment.py` in this repository prints this contrast for any stream. The result: **a fully predictable RNG clears ENISA's entire quantitative randomness bar** — the entropy thresholds by false crediting, the size thresholds by construction. This is not a stronger claim than the truth (we never assert the fake "has" 188 bits of entropy); it is the precise statement that ENISA's sanctioned assessment path would certify a zero-entropy source as meeting them.
+`entropy_claim_assessment.py` in this repository prints this contrast for any stream. The result: under ENISA's §7.1 statistical-testing path, **a fully predictable RNG would be assessed as clearing the quantitative randomness bar** — the entropy thresholds by *false crediting*, the size thresholds *by construction*. We never assert the fake "has" 188 bits of entropy; the precise statement is that ENISA's sanctioned assessment path would certify a zero-entropy source as meeting them. §7.1 itself concedes statistical tests give no distribution assurance — the point is that the structure still presents statistical testing as a source-quality *assessment* approach, which is what this counterexample targets.
 
 ## 4. Recommendation
 

@@ -83,15 +83,34 @@ elif verge 4 9 ; then ais="NTG.1"
 else ais="pre-4.9 (not in BSI table)"; fi
 say "Kernel $KVER -> AIS 20/31: $ais"
 
-# ---------- 5. ENISA sound-criteria mapping ----------
+# ---------- 5. RNG construction (kernel-version-gated, NOT hardcoded) ----------
+# The user-facing CSPRNG construction depends on the kernel version. We assert it
+# only where the version maps to a documented implementation; otherwise we report
+# EVIDENCE-NEEDED rather than guessing. (random.c moved to a ChaCha-based DRNG in
+# the 4.8 era and to the BLAKE2s pool + ChaCha20 fast-key-erasure design in 5.17/5.18.)
+hdr "Kernel RNG construction (version-gated)"
+if   verge 5 17; then
+  CSPRNG="ChaCha20 DRNG with BLAKE2s input pool + fast key erasure"; CSPRNG_KNOWN=yes
+elif verge 4 8 ; then
+  CSPRNG="ChaCha20-based DRNG (pre-5.17 random.c)"; CSPRNG_KNOWN=yes
+else
+  CSPRNG="EVIDENCE-NEEDED (kernel < 4.8; map random.c implementation to a cited source before asserting)"; CSPRNG_KNOWN=no
+fi
+say "CSPRNG construction: $CSPRNG"
+
 hdr "ENISA sound-criteria mapping (Linux getrandom/urandom)"
-say "[DEVIATES]      Agreed DRBG = HMAC/Hash/CTR_DRBG (SP800-90A)"
-say "                Linux user-facing CSPRNG is a ChaCha20 DRNG; NOT on ENISA's three-DRBG"
-say "                agreed list. For an ENISA agreed-DRBG posture use a SP800-90A DRBG"
-say "                (kernel 'drbg' module / jitterentropy, or userspace) seeded from the kernel."
+if [ "$CSPRNG_KNOWN" = yes ]; then
+  say "[DEVIATES]      Agreed DRBG = HMAC/Hash/CTR_DRBG (SP800-90A)"
+  say "                This kernel's user-facing CSPRNG is a ChaCha20-based DRNG; NOT on ENISA's"
+  say "                three-DRBG agreed list. For an ENISA agreed-DRBG posture use a SP800-90A DRBG"
+  say "                (kernel 'drbg' module / jitterentropy, or userspace) seeded from the kernel."
+  say "[MEETS]         Backtracking resistance for PFS (Note 70) — ChaCha20 fast key erasure (5.17+ confirmed; 4.8–5.16 via reseed)."
+else
+  say "[EVIDENCE-NEEDED] Agreed-DRBG verdict withheld: CSPRNG construction not established for this kernel."
+  say "[EVIDENCE-NEEDED] Backtracking-resistance verdict withheld pending construction evidence."
+fi
 say "[MEETS]         TRNG only seeds DRBG; no direct TRNG output (Note 67) — getrandom exposes DRBG only."
 say "[MEETS]         Seed min-entropy >=125 (Note 68) — kernel collects 256 bits before fully-seeded."
-say "[MEETS]         Backtracking resistance for PFS (Note 70) — ChaCha20 fast key erasure."
 say "[EVIDENCE]      Source modeling (preferred, §7.1 approach 2) — use BSI LRNG study as the model."
 if [ "$EC2" = yes ] || [ "$VIRT" != "none" -a "$VIRT" != "unknown" ]; then
   say "[VM-RISK]       Snapshot/clone state reuse — needs vmgenid/vmfork (>=5.18). vmgenid=$VMGENID."
@@ -116,13 +135,14 @@ cat > linux_assessment.json <<JSON
   "rng": { "entropy_avail": "$ENTAVAIL", "hwrng_current": "$(J "$HWRNG_CUR")",
            "virtio_rng": "$VIRTIO", "jitterentropy": "$JITTER", "rngd": "$RNGD",
            "haveged": "$HAVEGED", "getrandom": "$GETRANDOM", "crng_init_done_s": "${CRNG:-unknown}",
-           "vmgenid": "$VMGENID", "csprng": "ChaCha20 DRNG", "on_enisa_agreed_list": false },
+           "vmgenid": "$VMGENID", "csprng": "$(J "$CSPRNG")", "csprng_known": "$CSPRNG_KNOWN",
+           "on_enisa_agreed_list": $( [ "$CSPRNG_KNOWN" = yes ] && echo false || echo null ) },
   "bsi_ais2031": "$(J "$ais")",
   "verdicts": {
-    "agreed_drbg_algorithm": "DEVIATES",
+    "agreed_drbg_algorithm": "$( [ "$CSPRNG_KNOWN" = yes ] && echo DEVIATES || echo EVIDENCE-NEEDED )",
     "trng_seeds_drbg_only": "MEETS",
     "seed_min_entropy_125": "MEETS",
-    "backtracking_resistance": "MEETS",
+    "backtracking_resistance": "$( [ "$CSPRNG_KNOWN" = yes ] && echo MEETS || echo EVIDENCE-NEEDED )",
     "source_modeling": "EVIDENCE-NEEDED"
   }
 }

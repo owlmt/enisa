@@ -9,7 +9,9 @@ lists as a way to "assess the quality of the output of a random source".
 It implements:
   --mode simple  : FIPS 140-2 / AIS31-flavoured quick battery
                    (monobit, 4-bit poker, runs, longest-run)
-  --mode sp80022 : a faithful subset of NIST SP800-22
+  --mode sp80022 : an illustrative SP800-22-STYLE subset (NOT a validation
+                   implementation; e.g. longest-run uses M=128, not the NIST
+                   M=10^4 parameter set)
                    (monobit, block-frequency, runs, longest-run-of-ones,
                     cumulative-sums, approximate-entropy, serial,
                     and DFT/spectral if numpy is available)
@@ -307,7 +309,7 @@ def main():
             overall = overall and ok
         print()
     if args.mode in ("sp80022", "both"):
-        print("== NIST SP800-22 subset ==")
+        print("== NIST SP800-22-style subset (illustrative, not a validation impl) ==")
         for name, ok, detail in sp80022_battery(data, args.alpha):
             tag = "SKIP" if ok is None else ("PASS" if ok else "FAIL")
             print(f"  [{tag}] {name:22s} {detail}")

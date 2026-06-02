@@ -120,11 +120,13 @@ def main():
         print(f"{'':42s} -> {r['note']}")
     print()
     if args.public_key:
-        print("CONCLUSION: construction has 0 true secret min-entropy, yet")
+        print("CONCLUSION: construction has 0 true secret min-entropy, yet under ENISA's §7.1")
+        print("  statistical-testing path it would be ASSESSED AS CLEARING the quantitative bar:")
         print("  * entropy thresholds (>=125 / >=188) are FALSELY CREDITED via the §7.1")
         print("    statistical-testing path and output-based estimation, and")
         print("  * size thresholds (>=192 / >=384) are MET BY CONSTRUCTION (length, not secrecy).")
-        print("  => a fully predictable RNG clears ENISA's quantitative randomness bar.")
+        print("  We do NOT claim the stream HAS this entropy; the point is that the sanctioned")
+        print("  assessment method would certify a zero-entropy source as meeting the thresholds.")
 
 if __name__ == "__main__":
     main()
