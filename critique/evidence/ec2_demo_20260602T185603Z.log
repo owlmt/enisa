@@ -1,0 +1,105 @@
+EC2 §7.1 demo — 2026-06-02T18:56:03Z
+Host: Linux 6.1.172-216.329.amzn2023.x86_64 x86_64
+====
+### Generating PREDICTABLE stream (published-key AES-256-CTR) ###
+wrote fakeB.bin: 1250000 bytes (10000000 bits) of PREDICTABLE keystream
+  key   (PUBLIC): 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+  nonce (PUBLIC): 000000000000000000000000
+  -> anyone can regenerate this exact file; it carries no entropy.
+### Verifying reproducibility against pinned SHA-256 ###
+  expected: ffb11ee80ee4d3ab70f043984c926be88d46836adf6055230656c99077b44e30
+  actual  : ffb11ee80ee4d3ab70f043984c926be88d46836adf6055230656c99077b44e30
+  OK: byte-for-byte reproducible.
+### Generating REAL stream (os.urandom) for comparison ###
+wrote real.bin
+
+############ PREDICTABLE stream (should NOT be trusted) ############
+# input: 1250000 bytes (10000000 bits)
+
+== simple FIPS/AIS31-style battery ==
+  [PASS] monobit                ones=5000105 expect[4995257,5004743]
+  [PASS] poker4                 X=22.27 accept(1.03,57.4)
+  [PASS] runs                   runs=5000686 z=0.43 (|z|<3)
+  [PASS] longrun                longest=24 ceil=57
+
+== NIST SP800-22-style subset (illustrative, not a validation impl) ==
+  [PASS] frequency_monobit      p=0.9471 (alpha=0.01)
+  [PASS] block_frequency        p=0.5439 (alpha=0.01)
+  [PASS] runs                   p=0.6644 (alpha=0.01)
+  [PASS] longest_run_ones       p=0.9554 (alpha=0.01)
+  [PASS] cumulative_sums        p=0.9972 (alpha=0.01)
+  [PASS] approximate_entropy    p=0.2999 (alpha=0.01)
+  [PASS] serial_1               p=0.2999 (alpha=0.01)
+  [PASS] serial_2               p=0.0960 (alpha=0.01)
+  [SKIP] spectral_dft           skipped (numpy not available)
+
+OVERALL: ALL TESTS PASS
+
+############ REAL stream (os.urandom) ############
+# input: 1250000 bytes (10000000 bits)
+
+== simple FIPS/AIS31-style battery ==
+  [PASS] monobit                ones=5001120 expect[4995257,5004743]
+  [PASS] poker4                 X=10.22 accept(1.03,57.4)
+  [PASS] runs                   runs=4999530 z=0.30 (|z|<3)
+  [PASS] longrun                longest=21 ceil=57
+
+== NIST SP800-22-style subset (illustrative, not a validation impl) ==
+  [PASS] frequency_monobit      p=0.4787 (alpha=0.01)
+  [PASS] block_frequency        p=0.4746 (alpha=0.01)
+  [PASS] runs                   p=0.7664 (alpha=0.01)
+  [PASS] longest_run_ones       p=0.3500 (alpha=0.01)
+  [PASS] cumulative_sums        p=0.6281 (alpha=0.01)
+  [PASS] approximate_entropy    p=0.9398 (alpha=0.01)
+  [PASS] serial_1               p=0.9398 (alpha=0.01)
+  [PASS] serial_2               p=0.9050 (alpha=0.01)
+  [SKIP] spectral_dft           skipped (numpy not available)
+
+OVERALL: ALL TESTS PASS
+
+############ ENISA quantitative thresholds — PREDICTABLE stream ############
+# stream: fakeB.bin  (1250000 bytes, 10000000 bits)
+# output-based MCV min-entropy (SP800-90B 6.3.1, run on OUTPUT = wrong place):
+#   per-bit  : 0.9988 bits/bit   (p_max=0.50001)
+#   per-byte : 7.8887 bits/byte (p_max=0.004073)
+# TRUE secret min-entropy of construction: 0 (key is published; output fully determined)
+
+requirement                                type    thr       verdict
+----------------------------------------------------------------------------------------------------
+DRBG seed min-entropy (Note 68)            entropy 125 bits  FALSELY CREDITED AS MET
+                                           -> credited >=125 by output estimator / by passing §7.1 statistical tests; TRUE may be 0
+DRBG seed min-entropy, quantum (Note 69)   entropy 188 bits  FALSELY CREDITED AS MET
+                                           -> a 256-bit draw is credited ~256 bits >= 188 by the output estimator; TRUE may be 0
+CTR_DRBG block-cipher key (Note 71)        size    192 bits  MET BY SIZE
+                                           -> this is a bit-length check; AES-256 satisfies it even with a PUBLIC key
+Symmetric key / block cipher (Notes 3/19)  size    192 bits  MET BY SIZE
+                                           -> a key generated from this RNG has the requested SIZE but inherits 0 secret entropy
+Hash output (Note 4)                       size    384 bits  MECHANISM-LEVEL
+                                           -> property of the hash algorithm selected downstream, not of the RNG output
+MAC key, hash-based (Note 19)              size    192 bits  MET BY SIZE
+                                           -> size met; secret entropy inherited from RNG = 0 for the published-key fake
+
+CONCLUSION: construction has 0 true secret min-entropy, yet under ENISA's §7.1
+  statistical-testing path it would be ASSESSED AS CLEARING the quantitative bar:
+  * entropy thresholds (>=125 / >=188) are FALSELY CREDITED via the §7.1
+    statistical-testing path and output-based estimation, and
+  * size thresholds (>=192 / >=384) are MET BY CONSTRUCTION (length, not secrecy).
+  We do NOT claim the stream HAS this entropy; the point is that the sanctioned
+  assessment method would certify a zero-entropy source as meeting the thresholds.
+
+############ ENISA quantitative thresholds — REAL stream (contrast) ############
+# stream: real.bin  (1250000 bytes, 10000000 bits)
+# output-based MCV min-entropy (SP800-90B 6.3.1, run on OUTPUT = wrong place):
+#   per-bit  : 0.9985 bits/bit   (p_max=0.50011)
+#   per-byte : 7.8671 bits/byte (p_max=0.004135)
+# TRUE secret min-entropy of construction: unknown (must be source-modeled)
+
+
+Conclusion:
+ 1) Both streams receive the SAME statistical verdict; the predictable one is
+    reproducible byte-for-byte (verified against the pinned SHA-256 above).
+ 2) The predictable stream has 0 true secret min-entropy, yet ENISA's entropy
+    thresholds (>=125/>=188) are FALSELY CREDITED by the §7.1 statistical-testing
+    path, while its size thresholds (>=192/>=384) are MET BY CONSTRUCTION.
+ => Statistical testing of output cannot serve as a source-quality OR entropy
+    assessment. It can serve only as a startup/online failure-detection test.

@@ -1,0 +1,52 @@
+EC2 assessment — 2026-06-02T18:56:03Z
+Host: Linux 6.1.172-216.329.amzn2023.x86_64 x86_64
+====
+
+=== Platform & virtualization ===
+Kernel            : 6.1.172-216.329.amzn2023.x86_64
+Virtualization    : amazon
+WSL               : no
+AWS EC2           : yes
+
+=== Hardware inventory ===
+CPU               : Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+Logical CPUs      : 2
+RDRAND / RDSEED   : yes / yes
+MemTotal          : 916 MB
+DMI product       : t3.micro
+
+=== RNG architecture ===
+entropy_avail     : 256
+hwrng current     : none
+hwrng available   : none
+virtio-rng        : no
+jitterentropy_rng : yes
+rngd / haveged    : no / no
+getrandom(2)      : yes
+crng init done @  : unknown s (dmesg may need root)
+vmgenid driver    : no
+
+=== BSI AIS 20/31 kernel mapping ===
+Kernel 6.1 -> AIS 20/31: NONE (no formal AIS 20/31: DRT.1.4 request-length limit unmet; NOT a crypto weakness)
+
+=== Kernel RNG construction (version-gated) ===
+CSPRNG construction: ChaCha20 DRNG with BLAKE2s input pool + fast key erasure
+
+=== ENISA sound-criteria mapping (Linux getrandom/urandom) ===
+[DEVIATES]      Agreed DRBG = HMAC/Hash/CTR_DRBG (SP800-90A)
+                This kernel's user-facing CSPRNG is a ChaCha20-based DRNG; NOT on ENISA's
+                three-DRBG agreed list. For an ENISA agreed-DRBG posture use a SP800-90A DRBG
+                (kernel 'drbg' module / jitterentropy, or userspace) seeded from the kernel.
+[MEETS]         Backtracking resistance for PFS (Note 70) — ChaCha20 fast key erasure (5.17+ confirmed; 4.8–5.16 via reseed).
+[MEETS]         TRNG only seeds DRBG; no direct TRNG output (Note 67) — getrandom exposes DRBG only.
+[MEETS]         Seed min-entropy >=125 (Note 68) — kernel collects 256 bits before fully-seeded.
+[EVIDENCE]      Source modeling (preferred, §7.1 approach 2) — use BSI LRNG study as the model.
+[VM-RISK]       Snapshot/clone state reuse — needs vmgenid/vmfork (>=5.18). vmgenid=no.
+[VM-RISK]       Boot-time entropy reduced under virtualization (BSI 'Randomness in VMs').
+[VM-INFO]       Prefer hwrng/virtio-rng passthrough; virtio-rng=no, RDRAND=yes.
+
+=== Emitting RNG sample (sanity check only, NOT compliance evidence) ===
+wrote linux_rng_sample.bin (1250000 bytes). Optional: python3 ../critique/battery.py linux_rng_sample.bin
+
+=== Writing JSON ===
+wrote linux_assessment.json
