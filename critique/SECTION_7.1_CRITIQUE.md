@@ -36,24 +36,32 @@ A sharper observation: **§7.1 does not even name a test battery.** It is theref
 
 `predict_streamB_demo.py` emits an AES-256-CTR keystream from a **published** 256-bit key and 96-bit nonce. `battery.py` runs a FIPS/AIS31-style quick battery plus an 8-test subset of NIST SP800-22. `run_demo.sh` runs both on the predictable stream and on `os.urandom`.
 
-Measured on 10,000,000 bits (α = 0.01):
+Measured on 10,000,000 bits (α = 0.01). **Raw evidence logs are committed under `critique/evidence/`** (timestamped, with host/version provenance); reproduce with `run_demo.sh`.
 
-> The figures below are from one representative run. The **predictable** column is reproducible byte-for-byte (the key is published). The **os.urandom** column is *expected* to differ on every run — that is the nature of a real source, and the point is only that both columns yield the same PASS verdict. Reproduce with `run_demo.sh`; your os.urandom numbers will not match these, and that is correct.
+> The **predictable** column is *deterministic*: because the key is published, these exact figures reproduce on every run, on any machine. The **os.urandom** column differs on every run by nature — a real source is not reproducible — so the values shown are from one representative run and are not expected to match yours. The invariant being demonstrated is the **verdict** (both PASS), not the os.urandom p-values.
 
 | Test | Predictable (published-key AES-256-CTR) | os.urandom |
 |------|------------------------------------------|------------|
-| monobit (simple) | PASS | PASS |
-| 4-bit poker (simple) | PASS (X=22.27) | PASS (X=10.96) |
-| runs (simple) | PASS (z=0.43) | PASS (z=0.61) |
-| longest-run (simple) | PASS (24) | PASS (25) |
-| SP800-22 frequency/monobit | PASS (p=0.947) | PASS (p=0.710) |
-| SP800-22 block-frequency | PASS (p=0.544) | PASS (p=0.404) |
-| SP800-22 runs | PASS (p=0.664) | PASS (p=0.542) |
-| SP800-22 longest-run-of-ones | PASS (p=0.955) | PASS (p=0.105) |
-| SP800-22 cumulative-sums | PASS (p=0.997) | PASS (p=0.474) |
-| SP800-22 approximate-entropy | PASS (p=0.300) | PASS (p=0.769) |
-| SP800-22 serial (1,2) | PASS (0.300, 0.096) | PASS (0.769, 0.520) |
-| SP800-22 spectral/DFT | PASS (p=0.164) | PASS (p=0.593) |
+| monobit (simple) | PASS (ones=5000105) | PASS (ones=5000268) |
+| 4-bit poker (simple) | PASS (X=22.27) | PASS (X=15.99) |
+| runs (simple) | PASS (z=0.43) | PASS (z=1.80) |
+| longest-run (simple) | PASS (24) | PASS (23) |
+| SP800-22 frequency/monobit | PASS (p=0.9471) | PASS (p=0.8654) |
+| SP800-22 block-frequency | PASS (p=0.5439) | PASS (p=0.7951) |
+| SP800-22 runs | PASS (p=0.6644) | PASS (p=0.0716) |
+| SP800-22 longest-run-of-ones | PASS (p=0.9554) | PASS (p=0.6129) |
+| SP800-22 cumulative-sums | PASS (p=0.9972) | PASS (p=0.5737) |
+| SP800-22 approximate-entropy | PASS (p=0.2999) | PASS (p=0.1423) |
+| SP800-22 serial (1,2) | PASS (0.2999, 0.0960) | PASS (0.1421, 0.1648) |
+| SP800-22 spectral/DFT | PASS (p=0.1645) | PASS (p=0.0533) |
+| output-MCV min-entropy (bits/bit) | 0.9988 | 0.9987 |
+| **TRUE secret min-entropy** | **0 (key published)** | source-modeled (≠0) |
+
+*Data from the real WSL run of 2026-06-02T17:53:35Z (kernel 5.15, Python 3.12.3), committed under `critique/evidence/`. The predictable column is deterministic and reproduces exactly on any machine; the os.urandom column is from that run and differs on every run by nature.*
+
+![Section 7.1 demonstration](section7_1_demo.png)
+
+*Figure: both streams clear the α=0.01 PASS line on every test (left); the predictable stream's credited min-entropy (0.9988) is indistinguishable from the real source's (0.9987), yet its TRUE secret min-entropy is 0 (right). Regenerate with `python3 make_diagram.py` (or `--self-run` to recompute from freshly generated streams).*
 
 **Identical verdict.** The predictable stream is regenerable from the public key printed in `predict_streamB_demo.py`. (`battery.py` ships an **8-test subset** of NIST SP800-22, sufficient to demonstrate the effect; the full 15-test NIST STS is expected to give the same verdict, and the independently published AIS 31 v3.0 Tirn result at `github.com/owlmt/ais31-full-evaluation` confirms the predictor-based tests — MultiMMC, LZ78Y — also pass on this construction.)
 
