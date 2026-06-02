@@ -1,6 +1,6 @@
 # ENISA ACM §7.1 — Why "statistical testing" must not be advised as a source-quality assessment method
 
-**Target:** ENISA / ECCG *Agreed Cryptographic Mechanisms*, Section 7.1 *True Random Source*, first bullet ("Perform statistical tests on the output of the source"). References are to the **adopted v2.0 (May 2025)**, the applicable version. A v3.0 draft is in public review until end of July 2026; it should be checked against this wording before filing an update.
+**Scope.** This critique addresses ENISA / ECCG *Agreed Cryptographic Mechanisms*, Section 7.1 *True Random Source*, first bullet ("Perform statistical tests on the output of the source"). References are to the **adopted v2.0 (May 2025)**, the applicable version. A v3.0 draft is in public review until end of July 2026 and should be checked against this wording before it is cited.
 
 ---
 
