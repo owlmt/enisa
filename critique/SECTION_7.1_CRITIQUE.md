@@ -34,9 +34,11 @@ A sharper observation: **§7.1 does not even name a test battery.** It is theref
 
 ## 3. Reproducible demonstration (this repository)
 
-`predict_streamB_demo.py` emits an AES-256-CTR keystream from a **published** 256-bit key and 96-bit nonce. `battery.py` runs a FIPS/AIS31-style quick battery plus a NIST SP800-22 subset. `run_demo.sh` runs both on the predictable stream and on `os.urandom`.
+`predict_streamB_demo.py` emits an AES-256-CTR keystream from a **published** 256-bit key and 96-bit nonce. `battery.py` runs a FIPS/AIS31-style quick battery plus an 8-test subset of NIST SP800-22. `run_demo.sh` runs both on the predictable stream and on `os.urandom`.
 
 Measured on 10,000,000 bits (α = 0.01):
+
+> The figures below are from one representative run. The **predictable** column is reproducible byte-for-byte (the key is published). The **os.urandom** column is *expected* to differ on every run — that is the nature of a real source, and the point is only that both columns yield the same PASS verdict. Reproduce with `run_demo.sh`; your os.urandom numbers will not match these, and that is correct.
 
 | Test | Predictable (published-key AES-256-CTR) | os.urandom |
 |------|------------------------------------------|------------|
@@ -53,7 +55,7 @@ Measured on 10,000,000 bits (α = 0.01):
 | SP800-22 serial (1,2) | PASS (0.300, 0.096) | PASS (0.769, 0.520) |
 | SP800-22 spectral/DFT | PASS (p=0.164) | PASS (p=0.593) |
 
-**Identical verdict.** The predictable stream is regenerable from the public key printed in `predict_streamB_demo.py`. (The full 15-test NIST STS and the AIS 31 Tirn suite give the same verdict; the published AIS 31 result already demonstrates the predictor-based tests — MultiMMC, LZ78Y — also pass.)
+**Identical verdict.** The predictable stream is regenerable from the public key printed in `predict_streamB_demo.py`. (`battery.py` ships an **8-test subset** of NIST SP800-22, sufficient to demonstrate the effect; the full 15-test NIST STS is expected to give the same verdict, and the independently published AIS 31 v3.0 Tirn result at `github.com/owlmt/ais31-full-evaluation` confirms the predictor-based tests — MultiMMC, LZ78Y — also pass on this construction.)
 
 ## 3a. The same defect defeats ENISA's quantitative thresholds
 
